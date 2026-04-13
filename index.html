@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix-it Floris — Lead CRM</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f5f5f3;
+      --surface:   #ffffff;
+      --border:    #e5e4df;
+      --text:      #111110;
+      --muted:     #6b6b68;
+      --hint:      #9c9a94;
+      --radius:    10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #111;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header h1 { font-size: 16px; font-weight: 600; color: #fff; }
+    header p  { font-size: 12px; color: #888; margin-top: 2px; }
+    #last-updated { font-size: 11px; color: #555; white-space: nowrap; }
+
+    /* ── Layout ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+    /* ── Stat cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-card .label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .stat-card .value { font-size: 26px; font-weight: 600; color: var(--text); }
+    .stat-card .value.blue   { color: #1a5fa8; }
+    .stat-card .value.green  { color: #1a7a4a; }
+    .stat-card .value.amber  { color: #a05c0a; }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .filter-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .filter-btn:hover  { border-color: #aaa; color: var(--text); }
+    .filter-btn.active { background: #111; color: #fff; border-color: #111; }
+    .search-wrap { margin-left: auto; }
+    .search-wrap input {
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      width: 200px;
+    }
+    .search-wrap input:focus { border-color: #888; }
+
+    /* ── Lead cards grid ── */
+    .leads-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .lead-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .lead-card.status-follow-up { border-left: 3px solid #f59e0b; }
+    .lead-card.status-interested { border-left: 3px solid #22c55e; }
+    .lead-card.status-rejected  { border-left: 3px solid #ef4444; opacity: 0.6; }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .company-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .company-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .status-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-suggested      { background: #f3f4f6; color: #4b5563; }
+    .badge-contacted      { background: #dbeafe; color: #1e40af; }
+    .badge-followup       { background: #fef3c7; color: #92400e; }
+    .badge-interested     { background: #dcfce7; color: #166534; }
+    .badge-notinterested  { background: #fee2e2; color: #991b1b; }
+    .badge-rejected       { background: #fecaca; color: #7f1d1d; }
+
+    .why-fits {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .tags {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--bg);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 2px;
+    }
+    .date-info { font-size: 11px; color: var(--hint); }
+    .days-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .days-overdue { background: #fef3c7; color: #92400e; }
+    .days-ok      { background: #f0fdf4; color: #166534; }
+
+    .notion-link {
+      font-size: 11px;
+      color: #555;
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .notion-link:hover { background: var(--bg); }
+
+    /* ── Empty / loading states ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 14px;
+      grid-column: 1 / -1;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: #555;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Config banner (shown when token missing) ── */
+    .config-banner {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #92400e;
+      display: none;
+    }
+    .config-banner code {
+      background: #fef3c7;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* ── Section heading ── */
+    .section-heading {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Pipeline bar ── */
+    .pipeline-wrap { margin-bottom: 28px; }
+    .pipeline-bar {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      gap: 2px;
+      margin-bottom: 10px;
+    }
+    .bar-seg { height: 100%; border-radius: 2px; transition: width 0.4s; }
+    .pipeline-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Fix-it Floris — Lead CRM</h1>
+    <p>Freelance mechanical engineering pipeline</p>
+  </div>
+  <span id="last-updated">Loading…</span>
+</header>
+
+<main>
+
+  <div class="config-banner" id="config-banner">
+    Configuration needed — open this file and set your <code>NOTION_TOKEN</code>
+    and <code>NOTION_DATABASE_ID</code> in the CONFIG section at the top of the script.
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="spinner"></div></div>
+  </div>
+
+  <!-- Pipeline bar -->
+  <div class="pipeline-wrap">
+    <p class="section-heading">Pipeline</p>
+    <div class="pipeline-bar" id="pipeline-bar"></div>
+    <div class="pipeline-legend" id="pipeline-legend"></div>
+  </div>
+
+  <!-- Filters + search -->
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="Suggested">Suggested</button>
+    <button class="filter-btn" data-filter="Contacted">Contacted</button>
+    <button class="filter-btn" data-filter="Follow-up needed">Follow-up</button>
+    <button class="filter-btn" data-filter="Interested">Interested</button>
+    <button class="filter-btn" data-filter="Not interested">Not interested</button>
+    <button class="filter-btn" data-filter="Rejected – do not contact">Rejected</button>
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Search companies…">
+    </div>
+  </div>
+
+  <!-- Lead cards -->
+  <div class="leads-grid" id="leads-grid">
+    <div class="empty-state">
+      <div class="spinner"></div>
+      Loading your leads…
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── CONFIG — fill these in ──────────────────────────────────────────────────
+  // Your Notion integration token (starts with secret_...)
+  const NOTION_TOKEN = "YOUR_NOTION_TOKEN_HERE";
+
+  // Your Notion database ID (32 chars from the database URL)
+  const DATABASE_ID  = "YOUR_DATABASE_ID_HERE";
+  // ───────────────────────────────────────────────────────────────────────────
+
+  const PROXY = "https://notion-proxy.floris-crm.workers.dev";
+  // Note: see README for how to set up the free Cloudflare Worker proxy.
+  // This proxy adds your Notion token server-side so it's never exposed in the browser.
+
+  let allLeads  = [];
+  let activeFilter = "all";
+
+  // ── Status config ──────────────────────────────────────────────────────────
+  const STATUS = {
+    "Suggested":               { badge: "badge-suggested",     bar: "#d1d5db", legend: "#9ca3af", label: "Suggested" },
+    "Contacted":               { badge: "badge-contacted",     bar: "#93c5fd", legend: "#3b82f6", label: "Contacted" },
+    "Follow-up needed":        { badge: "badge-followup",      bar: "#fcd34d", legend: "#f59e0b", label: "Follow-up" },
+    "Interested":              { badge: "badge-interested",    bar: "#86efac", legend: "#22c55e", label: "Interested" },
+    "Not interested":          { badge: "badge-notinterested", bar: "#fca5a5", legend: "#ef4444", label: "Not interested" },
+    "Rejected – do not contact":{ badge: "badge-rejected",    bar: "#f87171", legend: "#dc2626", label: "Rejected" },
+  };
+
+  const STATUS_CARD_CLASS = {
+    "Follow-up needed":         "status-follow-up",
+    "Interested":               "status-interested",
+    "Rejected – do not contact":"status-rejected",
+  };
+
+  // ── Notion API fetch (via proxy to avoid CORS) ─────────────────────────────
+  async function queryNotion(cursor = null) {
+    const body = { page_size: 100 };
+    if (cursor) body.start_cursor = cursor;
+
+    const res = await fetch(
+      `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${NOTION_TOKEN}`,
+          "Content-Type": "application/json",
+          "Notion-Version": "2022-06-28",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Notion API error ${res.status}`);
+    }
+    return res.json();
+  }
+
+  async function fetchAllLeads() {
+    let pages = [], cursor = null;
+    do {
+      const data = await queryNotion(cursor);
+      pages = pages.concat(data.results || []);
+      cursor = data.has_more ? data.next_cursor : null;
+    } while (cursor);
+    return pages;
+  }
+
+  // ── Property readers ───────────────────────────────────────────────────────
+  function readTitle(p, key) {
+    return (p.properties[key]?.title || []).map(t => t.plain_text).join("") || "";
+  }
+  function readText(p, key) {
+    return (p.properties[key]?.rich_text || []).map(t => t.plain_text).join("") || "";
+  }
+  function readSelect(p, key) {
+    return p.properties[key]?.select?.name || "";
+  }
+  function readDate(p, key) {
+    const d = p.properties[key]?.date?.start;
+    return d ? new Date(d) : null;
+  }
+  function readMultiSelect(p, key) {
+    return (p.properties[key]?.multi_select || []).map(i => i.name);
+  }
+
+  // ── Parse pages into lead objects ──────────────────────────────────────────
+  function parseLead(p) {
+    const contacted   = readDate(p, "Date contacted");
+    const suggested   = readDate(p, "Date suggested");
+    const status      = readSelect(p, "Status");
+    const now         = new Date();
+    const daysSince   = contacted ? Math.floor((now - contacted) / 86400000) : null;
+
+    return {
+      id:            p.id,
+      url:           p.url,
+      company:       readTitle(p, "Company"),
+      country:       readText(p, "Country"),
+      city:          readText(p, "City"),
+      sector:        readSelect(p, "Sector"),
+      whyFits:       readText(p, "Why Floris fits"),
+      contactRole:   readText(p, "Contact role"),
+      fitLevel:      readSelect(p, "Fit level"),
+      fitTags:       readMultiSelect(p, "Fit tags"),
+      status,
+      suggested,
+      contacted,
+      daysSince,
+    };
+  }
+
+  // ── Render stat cards ──────────────────────────────────────────────────────
+  function renderStats(leads) {
+    const counts = {};
+    leads.forEach(l => counts[l.status] = (counts[l.status] || 0) + 1);
+
+    const totalContacted = (counts["Contacted"] || 0) +
+      (counts["Follow-up needed"] || 0) +
+      (counts["Interested"] || 0) +
+      (counts["Not interested"] || 0) +
+      (counts["Rejected – do not contact"] || 0);
+
+    const totalResponded = (counts["Interested"] || 0) +
+      (counts["Not interested"] || 0) +
+      (counts["Rejected – do not contact"] || 0);
+
+    const responseRate = totalContacted
+      ? Math.round(totalResponded / totalContacted * 100) : 0;
+    const successRate  = totalResponded
+      ? Math.round((counts["Interested"] || 0) / totalResponded * 100) : 0;
+
+    document.getElementById("stats-grid").innerHTML = `
+      <div class="stat-card">
+        <div class="label">Open suggestions</div>
+        <div class="value">${counts["Suggested"] || 0}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Contacted</div>
+        <div class="value blue">${totalContacted}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Follow-up needed</div>
+        <div class="value amber">${counts["Follow-up needed"] || 0}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Interested</div>
+        <div class="value green">${counts["Interested"] || 0}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Response rate</div>
+        <div class="value blue">${responseRate}%</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Success rate</div>
+        <div class="value green">${successRate}%</div>
+      </div>`;
+
+    // Pipeline bar
+    const total = leads.length || 1;
+    const barEl = document.getElementById("pipeline-bar");
+    const legEl = document.getElementById("pipeline-legend");
+    barEl.innerHTML = "";
+    legEl.innerHTML = "";
+
+    Object.entries(STATUS).forEach(([status, cfg]) => {
+      const count = counts[status] || 0;
+      if (!count) return;
+      const pct = (count / total * 100).toFixed(1);
+      barEl.innerHTML += `<div class="bar-seg" style="width:${pct}%;background:${cfg.bar};flex-shrink:0;"></div>`;
+      legEl.innerHTML += `
+        <div class="legend-item">
+          <div class="legend-dot" style="background:${cfg.legend};"></div>
+          ${cfg.label} (${count})
+        </div>`;
+    });
+  }
+
+  // ── Render lead card ───────────────────────────────────────────────────────
+  function renderCard(lead) {
+    const cfg         = STATUS[lead.status] || { badge: "badge-suggested" };
+    const cardClass   = STATUS_CARD_CLASS[lead.status] || "";
+    const tagsHtml    = lead.fitTags.map(t =>
+      `<span class="tag">${t}</span>`).join("");
+
+    const suggestedStr = lead.suggested
+      ? lead.suggested.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
+      : "—";
+
+    let daysHtml = "";
+    if (lead.status === "Contacted" || lead.status === "Follow-up needed") {
+      const cls = lead.daysSince >= 14 ? "days-overdue" : "days-ok";
+      daysHtml = `<span class="days-badge ${cls}">${lead.daysSince}d since contact</span>`;
+    }
+
+    return `
+      <div class="lead-card ${cardClass}">
+        <div class="card-top">
+          <div>
+            <div class="company-name">${lead.company}</div>
+            <div class="company-meta">${lead.city}${lead.city && lead.country ? ", " : ""}${lead.country} &middot; ${lead.sector}</div>
+          </div>
+          <span class="status-badge ${cfg.badge}">${lead.status}</span>
+        </div>
+        ${lead.whyFits ? `<p class="why-fits">${lead.whyFits}</p>` : ""}
+        ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ""}
+        <div class="card-footer">
+          <div>
+            <div class="date-info">Suggested ${suggestedStr} &middot; ${lead.fitLevel || ""} fit</div>
+            ${lead.contactRole ? `<div class="date-info">Contact: ${lead.contactRole}</div>` : ""}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            ${daysHtml}
+            <a href="${lead.url}" target="_blank" class="notion-link">Notion &rarr;</a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── Render filtered grid ───────────────────────────────────────────────────
+  function renderGrid() {
+    const query = document.getElementById("search").value.toLowerCase().trim();
+
+    const filtered = allLeads.filter(l => {
+      const matchStatus = activeFilter === "all" || l.status === activeFilter;
+      const matchSearch = !query ||
+        l.company.toLowerCase().includes(query) ||
+        l.country.toLowerCase().includes(query) ||
+        l.sector.toLowerCase().includes(query) ||
+        l.whyFits.toLowerCase().includes(query);
+      return matchStatus && matchSearch;
+    });
+
+    // Sort: follow-up first, then by date suggested descending
+    filtered.sort((a, b) => {
+      const priority = s => s === "Follow-up needed" ? 0 : s === "Contacted" ? 1 : 2;
+      const pd = priority(a.status) - priority(b.status);
+      if (pd !== 0) return pd;
+      return (b.suggested || 0) - (a.suggested || 0);
+    });
+
+    const grid = document.getElementById("leads-grid");
+    if (!filtered.length) {
+      grid.innerHTML = `<div class="empty-state">No leads match this filter.</div>`;
+      return;
+    }
+    grid.innerHTML = filtered.map(renderCard).join("");
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  async function init() {
+    if (NOTION_TOKEN === "YOUR_NOTION_TOKEN_HERE") {
+      document.getElementById("config-banner").style.display = "block";
+      document.getElementById("leads-grid").innerHTML =
+        `<div class="empty-state">Set your NOTION_TOKEN and DATABASE_ID in the script to load your leads.</div>`;
+      document.getElementById("stats-grid").innerHTML = "";
+      return;
+    }
+
+    try {
+      const pages = await fetchAllLeads();
+      allLeads    = pages.map(parseLead);
+
+      renderStats(allLeads);
+      renderGrid();
+
+      const now = new Date();
+      document.getElementById("last-updated").textContent =
+        `Updated ${now.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}`;
+
+    } catch (err) {
+      document.getElementById("leads-grid").innerHTML = `
+        <div class="empty-state">
+          Could not load from Notion: ${err.message}<br><br>
+          Make sure your token and database ID are correct,
+          and that your integration has access to the database.
+        </div>`;
+      console.error(err);
+    }
+  }
+
+  // ── Event listeners ────────────────────────────────────────────────────────
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = btn.dataset.filter;
+      renderGrid();
+    });
+  });
+
+  document.getElementById("search").addEventListener("input", renderGrid);
+
+  // Auto-refresh every 5 minutes
+  init();
+  setInterval(init, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
