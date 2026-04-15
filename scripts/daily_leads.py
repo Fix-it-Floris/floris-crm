@@ -46,8 +46,9 @@ ALREADY IN HIS DATABASE (do NOT suggest any of these):
 
 TODAY: {today}
 
-TASK: Find exactly 5 companies across Europe that would hire Floris RIGHT NOW.
-- Spread across at least 2 different countries
+TASK: Find exactly 5 companies in Europe that would hire Floris RIGHT NOW.
+- Prefer companies that do mechanical engineering, like manufacturing, machine design and product design
+- Exclude battery, electrical and chemical heavy themed companies
 - Mix of sectors: cleantech/sustainable energy, industrial automation/machinery, consumer hardware startups
 - Prefer companies that are manufacturing products in-house, scaling production, or have upcoming deadlines
 
