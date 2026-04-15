@@ -32,20 +32,21 @@ ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 
 LEAD_PROMPT = """
 You are a recruiter for Floris Witte — a freelance mechanical engineer. Check (www.floriswitte.com).
+Clear your history of past suggestions and start from scratch.
 
 FLORIS'S PROFILE:
-- Specialises in machine design, mechanical product development, industrial factory line automation,
+- Specialises in machine design, mechanical product development, industrial factory line optimisation,
 - Past clients: Engineering firms, leading corrugated packaging machine maker, Philips Drachten 
-- Past projects: automated packaging machines, automated potato filler, cobot End of arm tools, assembly and manufacturing lines,
+- Past projects: automated packaging machines, automated potato filler, cobot End of arm tools, part of assembly and manufacturing lines,
 - Engagement preference: 1–3 month fixed-price packages (€80–100/hr basis)
-- Works 100% remote, serves ALL of Europe
+- Works 100% remote
 
 ALREADY IN HIS DATABASE (do NOT suggest any of these):
 {existing_companies}
 
 TODAY: {today}
 
-TASK: Find exactly 5 companies in Europe that would hire Floris RIGHT NOW.
+TASK: Find exactly 5 companies in Europe that need Floris his expertise regularly.
 - Prefer companies that do mechanical engineering, like manufacturing, machine design and product design
 - NO battery-, electrical-, programming-, and chemistry themed companies
 - Mix of sectors: cleantech/sustainable energy, industrial automation/machinery, consumer hardware startups
