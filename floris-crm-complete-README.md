@@ -343,3 +343,5 @@ The schedule runs at 07:00 UTC:
 For exact 09:00 in winter, open `crm.yml` and change the three cron lines from
 `0 7`, `5 7`, `10 7` to `0 8`, `5 8`, `10 8` for the winter months.
 Change them back in spring.
+
+re-initiating the workflow 16-04-2026
