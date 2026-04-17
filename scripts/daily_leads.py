@@ -47,11 +47,11 @@ ALREADY IN HIS DATABASE (do NOT suggest any of these):
 TODAY: {today}
 
 TASK: Find exactly 5 companies in Europe that need Floris his expertise regularly.
-- Prefer companies that do mechanical engineering, like manufacturing, machine design and product design
+- Suggest AT LEAST 2 companies from the Netherlands
+- PREFER companies that do mechanical engineering, like manufacturing, machine design and product design
 - NO battery-, electrical-, programming-, and chemistry themed companies
-- Mix of sectors: cleantech/sustainable energy, industrial automation/machinery, consumer hardware startups
-- Prefer companies that are manufacturing products in-house, scaling production, or have upcoming deadlines
-- Suggest at least two companies from the Netherlands
+
+
 
 For each company return a JSON object with these exact keys:
 - company_name (string)
